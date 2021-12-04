@@ -2,7 +2,8 @@ import os
 import sqlite3
 import enum
 import platform
-from typing import Iterable, Optional
+from typing import Iterable, Optional, List
+from collections.abc import MutableMapping
 
 
 class Mode(enum.Enum):
@@ -12,7 +13,7 @@ class Mode(enum.Enum):
     OPEN_READ_ONLY = 'ro'
 
 
-class SqliteDbm:
+class SqliteDbm(MutableMapping):
     """Sqlite implementation of the DBM
     """
 
@@ -81,11 +82,15 @@ class SqliteDbm:
         if self.db is not None:
             self.close()
 
-    def keys(self) -> Iterable[str]:
+    def __iter__(self) -> Iterable[str]:
         """Get all keys in the database"""
         self.conn.execute("SELECT Key from Data")
         while r := self.conn.fetchone():
             yield r[0]
+
+    def keys(self) -> List[str]:
+        """Get all keys in the database"""
+        return list(k for k in self)
 
 
 def open(path: str, mode: Mode) -> SqliteDbm:
