@@ -31,6 +31,13 @@ class SqliteDbmTestCase(unittest.TestCase):
         self.assertEqual(b'hello world', self.db['a'])
         self.assertEqual(b'something else', self.db['b'])
 
+    def test_replacement(self):
+        """Verify writes can overwrite data"""
+        self.db['a'] = b'hello world'
+        self.assertEqual(b'hello world', self.db['a'])
+        self.db['a'] = b'something else'
+        self.assertEqual(b'something else', self.db['a'])
+
     def test_write_persistence(self):
         """Verify writes can be read after close"""
         self.db['a'] = b'hello world'
