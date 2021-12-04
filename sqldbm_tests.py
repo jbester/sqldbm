@@ -6,13 +6,13 @@ import os
 import shutil
 import random
 
+
 class SqliteDbmTestCase(unittest.TestCase):
     def setUp(self) -> None:
         self.path = tempfile.mkdtemp()
         self.db_name = 'test.db'
         path = os.path.join(self.path, self.db_name)
         self.db = sqldbm.open(path, Mode.OPEN_CREATE_NEW)
-        pass
 
     def tearDown(self) -> None:
         self.db.close()
@@ -79,6 +79,7 @@ class SqliteDbmTestCase(unittest.TestCase):
             self.db[f"rec{i}"] = random.randbytes(5)
         self.assertEqual(count, len(self.db))
 
+
 class SqliteDbmUseCaseTestCase(unittest.TestCase):
     def setUp(self) -> None:
         self.path = tempfile.mkdtemp()
@@ -93,10 +94,11 @@ class SqliteDbmUseCaseTestCase(unittest.TestCase):
         with sqldbm.open(db_path, Mode.OPEN_CREATE_NEW) as db:
             db['a'] = b'some data'
             self.assertEqual(db['a'], b'some data')
+            db['a'] = b'some other data'
+            self.assertEqual(db['a'], b'some other data')
             self.assertIn('a', db)
             del db['a']
             self.assertNotIn('a', db)
-
 
 
 if __name__ == '__main__':
