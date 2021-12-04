@@ -15,4 +15,4 @@
 # SOFTWARE.
 
 """Sqlite3-backed implementation of the dbm interface"""
-from sqldbm import SqliteDbm, Mode, open
+from .sqldbm import SqliteDbm, Mode, open
