@@ -79,6 +79,15 @@ class SqliteDbmTestCase(unittest.TestCase):
             self.db[f"rec{i}"] = random.randbytes(5)
         self.assertEqual(count, len(self.db))
 
+    def test_iter(self):
+        """Verify iteration over database"""
+        self.db['a'] = b'hello world'
+        self.db['b'] = b'something else'
+        key_set = set()
+        for key in self.db:
+            key_set.add(key)
+        self.assertEqual(set(['a', 'b']), key_set)
+
 
 class SqliteDbmUseCaseTestCase(unittest.TestCase):
     def setUp(self) -> None:
