@@ -4,6 +4,16 @@ import enum
 import platform
 from typing import Iterable, Optional, List
 from collections.abc import MutableMapping
+from contextlib import contextmanager
+
+
+@contextmanager
+def cursor(db):
+    cur = db.cursor()
+    try:
+        yield cur
+    finally:
+        cur.close()
 
 
 class Mode(enum.Enum):
@@ -26,28 +36,31 @@ class SqliteDbm(MutableMapping):
         if platform.system() == 'Windows':
             path = path.replace('\\', '/')
         self.db = sqlite3.connect(f'file:{path}?mode={mode}', uri=True)
-        self.conn = self.db.cursor()
-        self.conn.execute("CREATE TABLE IF NOT EXISTS Data (Key TEXT PRIMARY KEY UNIQUE NOT NULL, Value BLOB)")
-        self.conn.execute("CREATE INDEX IF NOT EXISTS data_key ON data(Key)")
+        with cursor(self.db) as cur:
+            cur.execute("CREATE TABLE IF NOT EXISTS Data (Key TEXT PRIMARY KEY UNIQUE NOT NULL, Value BLOB)")
+            cur.execute("CREATE INDEX IF NOT EXISTS data_key ON data(Key)")
 
     def __contains__(self, item: str) -> bool:
         """Test if a key exists within the database"""
-        self.conn.execute("SELECT COUNT(*) FROM Data WHERE Key =  ?", (item,))
-        count, = self.conn.fetchone()
+        with cursor(self.db) as cur:
+            cur.execute("SELECT COUNT(*) FROM Data WHERE Key =  ?", (item,))
+            count, = cur.fetchone()
         return count == 1
 
     def __len__(self) -> int:
         """Get the number of records in the database"""
-        self.conn.execute("SELECT COUNT(*) FROM Data")
-        count, = self.conn.fetchone()
+        with cursor(self.db) as cur:
+            cur.execute("SELECT COUNT(*) FROM Data")
+            count, = cur.fetchone()
         return count
 
     def __getitem__(self, item: str) -> Optional[bytes]:
         """Get the data associated with the given key or return None"""
-        self.conn.execute("SELECT Value FROM data WHERE Key = ?", (item,))
-        if v := self.conn.fetchone():
-            return v[0]
-        return None
+        with cursor(self.db) as cur:
+            cur.execute("SELECT Value FROM data WHERE Key = ?", (item,))
+            if v := cur.fetchone():
+                return v[0]
+            return None
 
     def __setitem__(self, key: str, value: bytes) -> None:
         """Insert or update the data in the database
@@ -55,13 +68,15 @@ class SqliteDbm(MutableMapping):
         :param key: key
         :param value: data value
         """
-        self.conn.execute("""INSERT INTO Data (Key, Value) VALUES (?, ?) 
-                             ON CONFLICT(Key) DO UPDATE SET Value=excluded.Value""",
-                          (key, value))
+        with cursor(self.db) as cur:
+            cur.execute("""INSERT INTO Data (Key, Value) VALUES (?, ?) 
+                                ON CONFLICT(Key) DO UPDATE SET Value=excluded.Value""",
+                            (key, value))
 
     def __delitem__(self, key: str):
         """Remove the key and record from the database"""
-        self.conn.execute("DELETE FROM Data WHERE Key = ? ", (key,))
+        with cursor(self.db) as cur:
+            cur.execute("DELETE FROM Data WHERE Key = ? ", (key,))
 
     def sync(self):
         """Write the database to disk"""
@@ -71,7 +86,6 @@ class SqliteDbm(MutableMapping):
         """Write and close the database"""
         self.db.commit()
         self.db.close()
-        self.conn = None
         self.db = None
 
     def __enter__(self):
@@ -84,9 +98,10 @@ class SqliteDbm(MutableMapping):
 
     def __iter__(self) -> Iterable[str]:
         """Get all keys in the database"""
-        self.conn.execute("SELECT Key from Data")
-        while r := self.conn.fetchone():
-            yield r[0]
+        with cursor(self.db) as cur:
+            cur.execute("SELECT Key from Data")
+            while r := cur.fetchone():
+                yield r[0]
 
     def keys(self) -> List[str]:
         """Get all keys in the database"""
