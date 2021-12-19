@@ -109,6 +109,20 @@ class SqliteDbmUseCaseTestCase(unittest.TestCase):
             del db['a']
             self.assertNotIn('a', db)
 
+    def test_reopen(self):
+        db_path = os.path.join(self.path, self.db_name)
+        with sqldbm.open(db_path, Mode.OPEN_CREATE_NEW) as db:
+            db['a'] = b'some data'
+            self.assertEqual(db['a'], b'some data')
+            db['a'] = b'some other data'
+            self.assertEqual(db['a'], b'some other data')
+            self.assertIn('a', db)
+            del db['a']
+            self.assertNotIn('a', db)
+            db['a'] = b'final value'
+        with sqldbm.open(db_path, Mode.OPEN_CREATE) as db:
+            self.assertIn('a', db)
+
 
 if __name__ == '__main__':
     unittest.main()

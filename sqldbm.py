@@ -19,7 +19,7 @@ def cursor(db):
 class Mode(enum.Enum):
     OPEN = 'rw'
     OPEN_CREATE = 'rwc'
-    OPEN_CREATE_NEW = 'rwc'
+    OPEN_CREATE_NEW = 'rwcn'
     OPEN_READ_ONLY = 'ro'
 
 
@@ -113,4 +113,5 @@ def open(path: str, mode: Mode) -> SqliteDbm:
     if mode == Mode.OPEN_CREATE_NEW:
         if os.path.exists(path):
             os.unlink(path)
+        mode = Mode.OPEN_CREATE
     return SqliteDbm(path, mode.value)
