@@ -5,7 +5,14 @@ import tempfile
 import os
 import shutil
 import random
+import shelve
+from dataclasses import dataclass
 
+@dataclass
+class TestEntryData:
+    id: int
+    field1: str
+    field2: str
 
 class SqliteDbmTestCase(unittest.TestCase):
     def setUp(self) -> None:
@@ -99,6 +106,7 @@ class SqliteDbmUseCaseTestCase(unittest.TestCase):
         shutil.rmtree(self.path, True)
 
     def test_use_case(self):
+        """Verify general use case"""
         db_path = os.path.join(self.path, self.db_name)
         with sqldbm.open(db_path, Mode.OPEN_CREATE_NEW) as db:
             db['a'] = b'some data'
@@ -110,18 +118,27 @@ class SqliteDbmUseCaseTestCase(unittest.TestCase):
             self.assertNotIn('a', db)
 
     def test_reopen(self):
+        """Verify OPEN_CREATE does not erase existing file"""
         db_path = os.path.join(self.path, self.db_name)
         with sqldbm.open(db_path, Mode.OPEN_CREATE_NEW) as db:
-            db['a'] = b'some data'
-            self.assertEqual(db['a'], b'some data')
-            db['a'] = b'some other data'
-            self.assertEqual(db['a'], b'some other data')
-            self.assertIn('a', db)
-            del db['a']
-            self.assertNotIn('a', db)
-            db['a'] = b'final value'
+            db['a'] = b'value'
         with sqldbm.open(db_path, Mode.OPEN_CREATE) as db:
             self.assertIn('a', db)
+            self.assertEqual(db['a'], b'value')
+
+    def test_interop_with_shelf(self):
+        """Verify interop with shelf module"""
+        db_path = os.path.join(self.path, self.db_name)
+        entry1 = TestEntryData(1, 'entry1', 'entry2')
+        entry2 = TestEntryData(2, 'hello', 'world')
+        with sqldbm.open(db_path, Mode.OPEN_CREATE_NEW) as db:
+            shelf = shelve.Shelf(db)
+            shelf['key1'] = entry1
+            shelf['key2'] = entry2
+        with sqldbm.open(db_path, Mode.OPEN_CREATE) as db:
+            with shelve.Shelf(db) as shelf:
+                self.assertEqual(entry1, shelf['key1'])
+                self.assertEqual(entry2, shelf['key2'])
 
 
 if __name__ == '__main__':

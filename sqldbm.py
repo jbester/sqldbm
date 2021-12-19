@@ -17,6 +17,13 @@ def cursor(db):
 
 
 class Mode(enum.Enum):
+    """File open mode
+
+     - OPEN - open a file for read/write
+     - OPEN_CREATE - open a file, create if it doesn't exist
+     - OPEN_CREATE_NEW - open a file, force creation even if it exists
+     - OPEN_READ_ONLY - open a file for read-only purposes
+    """
     OPEN = 'rw'
     OPEN_CREATE = 'rwc'
     OPEN_CREATE_NEW = 'rwcn'
@@ -80,12 +87,14 @@ class SqliteDbm(MutableMapping):
 
     def sync(self):
         """Write the database to disk"""
-        self.db.commit()
+        if self.db is not None:
+            self.db.commit()
 
     def close(self):
         """Write and close the database"""
-        self.db.commit()
-        self.db.close()
+        if self.db is not None:
+            self.db.commit()
+            self.db.close()
         self.db = None
 
     def __enter__(self):
