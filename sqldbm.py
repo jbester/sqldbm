@@ -111,7 +111,7 @@ class SqliteDbm:
         self.db = sqlite3.connect(f'file:{db_path}?mode={mode}', uri=True)
         self.tables = {}
 
-    def __getitem__(self, table_name):
+    def __getitem__(self, table_name) -> SqliteDbmTable:
         """Get the table name"""
         if table_name in self.tables:
             return self.tables[table_name]
@@ -129,7 +129,7 @@ class SqliteDbm:
             self.db.close()
         self.db = None
 
-    def __enter__(self):
+    def __enter__(self) -> 'SqliteDbm':
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
