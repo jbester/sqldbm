@@ -98,6 +98,13 @@ class SqliteDbmTable(MutableMapping):
 
 class SqliteDbm:
     """Sqlite implementation of the DBM
+
+Example:
+>>> with open('data.db', Mode.OPEN_CREATE_NEW) as db:
+...    db['data']['key1'] = b'one value'
+...    db['data']['key2'] = b'some other value'
+...    for key in data_table:
+...        print(key, data_table[key])
     """
 
     def __init__(self, db_path: str, mode: str):
@@ -113,9 +120,9 @@ class SqliteDbm:
 
     def __getitem__(self, table_name) -> SqliteDbmTable:
         """Get the table name"""
-        if table_name in self.tables:
-            return self.tables[table_name]
-        return SqliteDbmTable(self.db, table_name)
+        if table_name not in self.tables:
+            self.tables[table_name] = SqliteDbmTable(self.db, table_name)
+        return self.tables[table_name]
 
     def sync(self):
         """Write the database to disk"""

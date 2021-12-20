@@ -9,7 +9,7 @@ import shelve
 from dataclasses import dataclass
 
 
-@dataclass
+@dataclass(frozen=True)
 class TestEntryData:
     id: int
     field1: str
@@ -132,6 +132,16 @@ class SqliteDbmUseCaseTestCase(unittest.TestCase):
             self.assertIn('a', data_table)
             self.assertEqual(data_table['a'], b'value')
 
+    def test_open_create_new(self):
+        """Verify OPEN_CREATE_NEW does erase existing file"""
+        db_path = os.path.join(self.path, self.db_name)
+        with sqldbm.open(db_path, Mode.OPEN_CREATE_NEW) as db:
+            data_table = db['data']
+            data_table['a'] = b'value'
+        with sqldbm.open(db_path, Mode.OPEN_CREATE_NEW) as db:
+            data_table = db['data']
+            self.assertEqual(0, len(data_table))
+
     def test_interop_with_shelf(self):
         """Verify interop with shelf module"""
         db_path = os.path.join(self.path, self.db_name)
@@ -175,6 +185,10 @@ class SqliteDbmUseCaseTestCase(unittest.TestCase):
             self.assertIn('key2', shelf1)
             self.assertIn('key2', shelf2)
             self.assertIn('key3', shelf2)
+            self.assertEqual(entry1, shelf1['key1'])
+            self.assertEqual(entry2, shelf1['key2'])
+            self.assertEqual(entry3, shelf2['key2'])
+            self.assertEqual(entry4, shelf2['key3'])
 
 
 if __name__ == '__main__':
