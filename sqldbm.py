@@ -101,10 +101,14 @@ class SqliteDbm:
 
 Example:
 >>> with open('data.db', Mode.OPEN_CREATE_NEW) as db:
-...    db['data']['key1'] = b'one value'
-...    db['data']['key2'] = b'some other value'
-...    for key in data_table:
-...        print(key, data_table[key])
+...    tbl = db['data'] # get a handle to the table
+...    tbl['key1'] = b'one value'
+...    tbl['key2'] = b'some other value'
+...    for key in tbl:
+...        print(key, tbl[key])
+...
+key1 b'one value'
+key2 b'some other value'
     """
 
     def __init__(self, db_path: str, mode: str):
