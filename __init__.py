@@ -14,5 +14,21 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-"""Sqlite3-backed implementation of the dbm interface"""
+"""Sqlite3-backed implementation of the dbm interface
+
+Usage example:
+
+>>> import sqldbm
+>>> with sqldbm.open('some_file.db', sqldbm.Mode.OPEN_CREATE_NEW) as db:
+...    data_table = db['data']
+...    data_table['key1'] = b'one value'
+...    data_table['key2'] = b'some other value'
+...    for key in data_table:
+...        print(key, data_table[key])
+...    del data_table['key1']
+...
+key1 b'one value'
+key2 b'some other value'
+
+"""
 from .sqldbm import SqliteDbm, Mode, open
